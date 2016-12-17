@@ -121,7 +121,7 @@ LOG_HEADER = """<!DOCTYPE html>
 <head>
 	<meta charset="utf-8">
 	<title>{} Logs</title>
-	<link rel="stylesheet" href="../../logs.css">
+	<link rel="stylesheet" href="../../log.css">
 </head>
 <body>
 	<p><a href="index.html">{} Calendar</a></p>
