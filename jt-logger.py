@@ -58,6 +58,9 @@ LOG_FOLDER = 'logs'
 # The URL where the logs are stored
 LOG_LOCATION = 'http://gnipsel.com/logs/'
 
+# stop robots from indexing
+BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
+
 # End Configuration
 
 HTML = {
@@ -75,6 +78,7 @@ CHANNEL_HEADER = """<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		{}
 		<title>Chat Logs</title>
 		<link rel="stylesheet" href="../channel.css">
 	</head>
@@ -93,6 +97,7 @@ INDEX_HEADER = """<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	{}
 	<title>JT Logs</title>
 	<link rel="stylesheet" href="../../calendar.css">
 </head>
@@ -120,6 +125,7 @@ LOG_HEADER = """<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	{}
 	<title>{} Logs</title>
 	<link rel="stylesheet" href="../../log.css">
 </head>
@@ -138,7 +144,7 @@ def setkeepalive(sock):
 
 def channel_index():
 	with open(os.path.join(os.getcwd(), LOG_FOLDER, 'index.html'), 'w') as index:
-		index.write(CHANNEL_HEADER)
+		index.write(CHANNEL_HEADER.format(BOTS))
 		for channel in CHANNELS:
 			link = channel.replace('#', '%23')
 			index.write('<p><a href="{}/index.html">{}</a></p>\n'.format(link, channel))
@@ -289,7 +295,7 @@ class Logbot(SingleServerIRCBot):
 
 	def create_log(self, path, channel): # create and empty log file
 		with open(path, 'w') as log:
-			log.write(LOG_HEADER.format(channel, channel))
+			log.write(LOG_HEADER.format(BOTS, channel, channel))
 			log.writelines(LOG_FOOTER)
 		self.create_index(channel)
 
@@ -309,7 +315,7 @@ class Logbot(SingleServerIRCBot):
 			ym.add(log[:7])
 			y.add(log[:4])
 		if len(y) > 0: # create the index
-			index = INDEX_HEADER.format(channel)
+			index = INDEX_HEADER.format(BOTS, channel)
 			# list of year-month for channel
 			monthlist = sorted(list(ym),reverse=True)
 			yearlist = sorted(list(y),reverse=True)
