@@ -67,11 +67,11 @@ HTML = {
 	"help" : "{}: Today's Log {}{}/{}.html",
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '-!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
-	"mode" : '-!- mode/<span class="mode">%channel%</span> [%modes% %person%] by %giver%',
-	"nick" : '<span class="nick">%old%</span> is now known as <span class="nick">%new%</span>',
+	"mode" : '-!- mode/<span class="mode">{}</span> [{} {}] by {}',
+	"nick" : '<span class="nick">{}</span> is now known as <span class="nick">{}</span>',
 	"pubmsg" : '{} <span class="person">{}:</span> {}',
-	"pubnotice" : '<span class="notice">-%user%:%channel%-</span> %message%',
-	"topic" : '<span class="topic">%user%</span> changed topic of <span class="topic">%channel%</span> to: %message%',
+	"pubnotice" : '<span class="notice">-{}:{}-</span>{}',
+	"topic" : '<span class="topic">{}/span> changed topic of <span class="topic">{}</span> to: {}',
 }
 
 CHANNEL_HEADER = """<!DOCTYPE html>
@@ -185,34 +185,20 @@ class Logbot(SingleServerIRCBot):
 	### Loggable events
 
 	def on_action(self, c, e): # Someone says /me xxx
-		self.format_event("action", e)
+		self.format_event('"action', e)
 
 	def on_join(self, c, e): # someone joins the channel
 		pass
 		#self.format_event("join", e)
 
 	def on_kick(self, c, e):
-		self.format_event("kick", e)
+		self.format_event('kick', e)
 
 	def on_mode(self, c, e):
-		self.format_event("mode", e,
-						 {"%modes%" : e.arguments()[0],
-						  "%person%" : e.arguments()[1] if len(e.arguments()) > 1 else e.target(),
-						  "%giver%" : nm_to_n(e.source()),
-						 })
+		self.format_event('mode', e)
 
 	def on_nick(self, c, e):
 		self.format_event('nick',e)
-		"""
-		old_nick = nm_to_n(e.source())
-		# Only write the event on channels that actually had the user in the channel
-		for chan in self.channels:
-			if old_nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
-				self.format_event("nick", e,
-							 {"%old%" : old_nick,
-							  "%new%" : e.target(),
-							  "%chan%": chan,
-							 })"""
 
 	def on_part(self, c, e):
 		pass
@@ -224,10 +210,10 @@ class Logbot(SingleServerIRCBot):
 		elif e.arguments()[0].startswith('log'):
 			self.log(c, e)
 		else: # only log messages
-			self.format_event("pubmsg", e)
+			self.format_event('pubmsg', e)
 
 	def on_pubnotice(self, c, e):
-		self.format_event("pubnotice", e)
+		self.format_event('pubnotice', e)
 
 	def on_privmsg(self, c, e):
 		print nm_to_n(e.source()), e.arguments()
@@ -273,7 +259,16 @@ class Logbot(SingleServerIRCBot):
 		elif action == 'pubmsg': # public message
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
 		elif action == 'kick': # someone got kicked off the channel
-			msg = msg.format(hm, self.user(event), e.target(), e.source(), e.arguments()[1])
+			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
+		elif action == 'mode': # the mode was changed with /mode?
+			person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
+			msg = msg.format(hm, , event.arguments()[0], person, self.user(event))
+		elif action == 'nick': # user nick changed
+			msg = msg.format(hm, self.user(event), event.target())
+		elif action == 'pubnotice': # /notice posted
+			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
+		elif action == 'topic': # /topic changed
+			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
 		self.append_log_msg(date, event.target(), msg)
 
 	def append_log_msg(self, date, channel, msg):
