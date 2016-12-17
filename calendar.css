@@ -1,0 +1,24 @@
+thead {color:green;}
+/*tbody {color:blue;}*/
+tfoot {color:red;}
+/*
+table, th {border:1px solid black;}
+td {border:none}
+*/
+table {border-collapse: collapse; table-layout: fixed;}
+table, th, td {border: 1px solid black;}
+th {padding: 2px}
+
+div.calendar {overflow-x:auto;}
+.dayheader {color: black; font-family: "Courier New", Courier, monospace;}
+
+.days {text-align: center}
+
+td.month {
+vertical-align:top;
+}
+
+footer{
+text-align: center;
+width: 100%;
+}
