@@ -241,12 +241,6 @@ class Logbot(SingleServerIRCBot):
 		# event.source() is the user and IP address
 		return event.source().split("!")[0]
 
-	"""
-	format_event replaces place holders with stuff
-	help user, channel, date
-	action time, user, message
-	"""
-
 	def format_event(self, action, event, params={}):
 		# event.target() is the channel
 		# event.arguments()[0] is the message
