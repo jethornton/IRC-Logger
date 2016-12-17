@@ -256,7 +256,7 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
 			person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
-			msg = msg.format(hm, , event.arguments()[0], person, self.user(event))
+			msg = msg.format(hm, '?', event.arguments()[0], person, self.user(event))
 		elif action == 'nick': # user nick changed
 			msg = msg.format(hm, self.user(event), event.target())
 		elif action == 'pubnotice': # /notice posted
