@@ -66,7 +66,7 @@ BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, 
 HTML = {
 	"help" : "{}: Today's Log {}{}/{}.html",
 	"action" : '{} * <span class="person">{}</span> {}',
-	"kick" : '-!- <span class="kick">%user%</span> was kicked from %channel% by %kicker% [%reason%]',
+	"kick" : '-!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
 	"mode" : '-!- mode/<span class="mode">%channel%</span> [%modes% %person%] by %giver%',
 	"nick" : '<span class="nick">%old%</span> is now known as <span class="nick">%new%</span>',
 	"pubmsg" : '{} <span class="person">{}:</span> {}',
@@ -192,12 +192,7 @@ class Logbot(SingleServerIRCBot):
 		#self.format_event("join", e)
 
 	def on_kick(self, c, e):
-		self.format_event("kick", e,
-						 {"%kicker%" : e.source(),
-						  "%channel%" : e.target(),
-						  "%user%" : e.arguments()[0],
-						  "%reason%" : e.arguments()[1],
-						 })
+		self.format_event("kick", e)
 
 	def on_mode(self, c, e):
 		self.format_event("mode", e,
@@ -277,6 +272,8 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
 		elif action == 'pubmsg': # public message
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
+		elif action == 'kick': # someone got kicked off the channel
+			msg = msg.format(hm, self.user(event), e.target(), e.source(), e.arguments()[1])
 		self.append_log_msg(date, event.target(), msg)
 
 	def append_log_msg(self, date, channel, msg):
