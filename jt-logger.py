@@ -55,8 +55,8 @@ NICK_PASS = ""
 # The local folder to save logs to
 LOG_FOLDER = 'logs'
 
-# The URL where the logs are stored
-LOG_LOCATION = 'http://gnipsel.com/logs/'
+# The base URL where the logs are stored
+LOG_LOCATION = 'http://gnipsel.com/'
 
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
@@ -73,7 +73,7 @@ LOG_QUIT = False
 # End Configuration
 
 HTML = {
-	"help" : "{}: Today's Log {}{}/{}.html",
+	"help" : "{}: Today's Log {}.html",
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
 	"mode" : '{} -!- {} mode set to <span class="mode">{}</span> by <span class="person">{}</span>',
@@ -255,7 +255,8 @@ class Logbot(SingleServerIRCBot):
 
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
-		log = self.format_html['help'].format(self.user(event), LOG_LOCATION, event.target(), date)
+		log_url = os.path.join(LOG_LOCATION, LOG_FOLDER, event.target(), date)
+		log = self.format_html['help'].format(self.user(event), log_url)
 		c.privmsg(event.target(), log)
 
 	def user(self, event):
