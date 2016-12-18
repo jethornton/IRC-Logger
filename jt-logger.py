@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """
-jt-logger
+JT Logger
 
 A minimal IRC log bot
 
@@ -48,7 +48,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2']#, '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -61,17 +61,25 @@ LOG_LOCATION = 'http://gnipsel.com/logs/'
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
 
+# turn on and off loggable events
+LOG_KICK = False
+LOG_JOIN = False
+LOG_MODE = False
+LOG_NICK = True
+LOG_PUBNOTICE = False
+LOG_TOPIC = False
+
 # End Configuration
 
 HTML = {
 	"help" : "{}: Today's Log {}{}/{}.html",
 	"action" : '{} * <span class="person">{}</span> {}',
-	"kick" : '-!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
-	"mode" : '-!- mode/<span class="mode">{}</span> [{} {}] by {}',
-	"nick" : '<span class="nick">{}</span> is now known as <span class="nick">{}</span>',
+	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
+	"mode" : '{} -!- mode/<span class="mode">{}</span> [{} {}] by {}',
+	"nick" : '{} <span class="nick">{}</span> is now known as <span class="nick">{}</span>',
 	"pubmsg" : '{} <span class="person">{}:</span> {}',
-	"pubnotice" : '<span class="notice">-{}:{}-</span>{}',
-	"topic" : '<span class="topic">{}/span> changed topic of <span class="topic">{}</span> to: {}',
+	"pubnotice" : '{} <span class="notice">-{}:{}-</span>{}',
+	"topic" : '{} <span class="topic">{}/span> changed topic of <span class="topic">{}</span> to: {}',
 }
 
 CHANNEL_HEADER = """<!DOCTYPE html>
@@ -162,8 +170,8 @@ class Logbot(SingleServerIRCBot):
 		self.nick_pass = nick_pass
 
 		#self.load_channel_locations()
-		#print "Logbot %s" % __version__
-		print "Connecting to %s:%i..." % (server, port)
+		print 'JT Logbot {}'.format(__version__)
+		print "Connecting to {}:{}...".format(server, port)
 		print "Press Ctrl-C to quit"
 
 	def quit(self):
@@ -184,57 +192,62 @@ class Logbot(SingleServerIRCBot):
 
 	### Loggable events
 
-	def on_action(self, c, e): # Someone says /me xxx
-		self.format_event('"action', e)
+	def on_action(self, c, event): # Someone says /me xxx
+		self.format_event('action', event)
 
-	def on_join(self, c, e): # someone joins the channel
-		pass
-		#self.format_event("join", e)
+	def on_join(self, c, event): # someone joins the channel
+		if LOG_JOIN:self.format_event("join", event)
 
-	def on_kick(self, c, e):
-		self.format_event('kick', e)
+	def on_kick(self, c, event):
+		if LOG_KICK:self.format_event('kick', event)
 
-	def on_mode(self, c, e):
-		self.format_event('mode', e)
+	def on_mode(self, c, event):
+		if LOG_MODE:self.format_event('mode', event)
 
-	def on_nick(self, c, e):
-		self.format_event('nick',e)
+	def on_nick(self, c, event):
+		if LOG_NICK:
+			nick = self.user(event)
+			# Only write the event on channels that actually had the user in the channel
+			for chan in self.channels:
+				#print 'user list', self.channels[chan].users()
+				#print 'channel', chan
+				if nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
+					self.format_event('nick', event, {'channel':chan,
+					'old_nick':self.user(event), 'new_nick':event.target()})
 
-	def on_part(self, c, e):
-		pass
-		#self.format_event("part", e)
+	def on_part(self, c, event):
+		if LOG_PART:self.format_event("part", event)
 
-	def on_pubmsg(self, c, e): # public messages
-		if e.arguments()[0].startswith(NICK):
-			self.log(c, e)
-		elif e.arguments()[0].startswith('log'):
-			self.log(c, e)
+	def on_pubmsg(self, c, event): # public messages
+		#print c.info()
+		if event.arguments()[0].startswith(NICK):
+			self.log(c, event)
+		elif event.arguments()[0].startswith('log'):
+			self.log(c, event)
 		else: # only log messages
-			self.format_event('pubmsg', e)
+			self.format_event('pubmsg', event)
 
-	def on_pubnotice(self, c, e):
-		self.format_event('pubnotice', e)
+	def on_pubnotice(self, c, event):
+		if LOG_PUBNOTICE:self.format_event('pubnotice', event)
 
-	def on_privmsg(self, c, e):
-		print nm_to_n(e.source()), e.arguments()
-		c.privmsg(nm_to_n(e.source()), self.format_html["help"])
+	def on_privmsg(self, c, event):
+		print self.user(event), event.arguments()
+		c.privmsg(self.user(event), self.format_html["help"])
 
-	def on_quit(self, c, e):
-		pass
-		"""
-		nick = nm_to_n(e.source())
-		# Only write the event on channels that actually had the user in the channel
-		for chan in self.channels:
-			if nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
-				self.format_event("quit", e, {"%chan%" : chan})
-		"""
+	def on_quit(self, c, event):
+		if QUIT:
+			nick = self.user(event)
+			# Only write the event on channels that actually had the user in the channel
+			for chan in self.channels:
+				if nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
+					self.format_event("quit", event, {"%chan%" : chan})
 
-	def on_topic(self, c, e): # someone changes the topic with /topic
-		self.format_event("topic", e)
+	def on_topic(self, c, event): # someone changes the topic with /topic
+		if TOPIC:self.format_event("topic", event)
 
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
-		log = self.format_html['help'].format(LOG_LOCATION,self.user(event), event.target(), date)
+		log = self.format_html['help'].format(self.user(event), LOG_LOCATION, event.target(), date)
 		c.privmsg(event.target(), log)
 
 	def user(self, event):
@@ -242,12 +255,13 @@ class Logbot(SingleServerIRCBot):
 		return event.source().split("!")[0]
 
 	def format_event(self, action, event, params={}):
-		# event.target() is the channel
+		# event.target() is the channel sometimes... XXXXXXXXXXXXXXXXXXXXXXXXX
 		# event.arguments()[0] is the message
 		# event.eventtype() is the event type like pubmsg, nick etc.
 		date = time.strftime("%Y-%m-%d")
 		hm = time.strftime('%I:%M')
 		msg = self.format_html[action]
+		channel = event.target()
 		if action == 'action': # someone says /me
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
 		elif action == 'pubmsg': # public message
@@ -256,28 +270,28 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
 			person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
-			msg = msg.format(hm, '?', event.arguments()[0], person, self.user(event))
+			msg = msg.format(hm, event.target(), event.arguments()[0], person, self.user(event))
 		elif action == 'nick': # user nick changed
+			#print params['channel'], params['old_nick'], params['new_nick']
 			msg = msg.format(hm, self.user(event), event.target())
+			channel = params['channel']
 		elif action == 'pubnotice': # /notice posted
 			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
 		elif action == 'topic': # /topic changed
 			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
-		self.append_log_msg(date, event.target(), msg)
+		self.append_log_msg(date, channel, msg)
 
 	def append_log_msg(self, date, channel, msg):
-		print channel, date, msg
+		print date, channel, msg
 		log_path = os.path.join(os.getcwd(), LOG_FOLDER, channel, date) + '.html'
-		if not os.path.isfile(log_path): # just do this here maybe
+		if not os.path.isfile(log_path):
 			self.create_log(log_path, channel)
-		#data = []
 		with open(log_path, 'r') as log:
 			data = log.readlines()[:-len(LOG_FOOTER)]
 			data.extend([msg, '\n<br/>\n'])
 			data.extend(LOG_FOOTER)
 		with open(log_path, 'w') as log:
 			log.writelines(data)
-		#write_lines(filename, data)
 
 	def create_log(self, path, channel): # create and empty log file
 		with open(path, 'w') as log:
