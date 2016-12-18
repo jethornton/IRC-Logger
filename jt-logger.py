@@ -28,7 +28,7 @@ All configuration is done in this file
 """
 
 __author__ = "John Thornton <bjt128@gmail.com>"
-__version__ = "1.0.0"
+__version__ = "1.2"
 __date__ = "12/17/2016"
 __copyright__ = "Copyright (c) John Thornton"
 __license__ = "GPL3"
@@ -48,7 +48,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2']#, '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -64,10 +64,11 @@ BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, 
 # turn on and off loggable events
 LOG_KICK = False
 LOG_JOIN = False
-LOG_MODE = False
+LOG_MODE = True
 LOG_NICK = True
 LOG_PUBNOTICE = False
-LOG_TOPIC = False
+LOG_TOPIC = True
+LOG_QUIT = False
 
 # End Configuration
 
@@ -75,11 +76,11 @@ HTML = {
 	"help" : "{}: Today's Log {}{}/{}.html",
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
-	"mode" : '{} -!- mode/<span class="mode">{}</span> [{} {}] by {}',
-	"nick" : '{} <span class="nick">{}</span> is now known as <span class="nick">{}</span>',
+	"mode" : '{} -!- {} mode set to <span class="mode">{}</span> by <span class="person">{}</span>',
+	"nick" : '{} <span class="person">{}</span> is now known as <span class="person">{}</span>',
 	"pubmsg" : '{} <span class="person">{}:</span> {}',
 	"pubnotice" : '{} <span class="notice">-{}:{}-</span>{}',
-	"topic" : '{} <span class="topic">{}/span> changed topic of <span class="topic">{}</span> to: {}',
+	"topic" : '{} <span class="person">{}</span> changed topic of <span class="channel">{}</span> to: {}',
 }
 
 CHANNEL_HEADER = """<!DOCTYPE html>
@@ -150,26 +151,33 @@ def setkeepalive(sock):
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 30)
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 3)
 
-def channel_index():
-	with open(os.path.join(os.getcwd(), LOG_FOLDER, 'index.html'), 'w') as index:
-		index.write(CHANNEL_HEADER.format(BOTS))
-		for channel in CHANNELS:
-			link = channel.replace('#', '%23')
-			index.write('<p><a href="{}/index.html">{}</a></p>\n'.format(link, channel))
-		index.write(CHANNEL_FOOTER)
-
 class Logbot(SingleServerIRCBot):
 	def __init__(self, server, port, server_pass=None, channels=[],
 				 nick="timber", nick_pass=None, format_html=HTML):
 		SingleServerIRCBot.__init__(self, [(server, port, server_pass)], nick, nick)
-
 		self.chans = [x.lower() for x in channels]
 		self.format_html = format_html
-		#self.set_ftp()
 		self.count = 0
 		self.nick_pass = nick_pass
+		# create the log directory if not found
+		if not os.path.exists(LOG_FOLDER):
+			os.makedirs(LOG_FOLDER)
+		# create the channel index when started
+		with open(os.path.join(os.getcwd(), LOG_FOLDER, 'index.html'), 'w') as index:
+			index.write(CHANNEL_HEADER.format(BOTS))
+			for channel in CHANNELS:
+				link = channel.replace('#', '%23')
+				index.write('<p><a href="{}/index.html">{}</a></p>\n'.format(link, channel))
+			index.write(CHANNEL_FOOTER)
+		# create channel directories if not found
+		for channel in CHANNELS:
+			channel_directory = os.path.join(os.getcwd(), LOG_FOLDER, channel)
+			if not os.path.isdir(channel_directory):
+				os.makedirs(channel_directory)
+			else: # check for index in channel directory
+				if not os.path.isfile(os.path.join(channel_directory, 'index.html')):
+					self.create_index(channel)
 
-		#self.load_channel_locations()
 		print 'JT Logbot {}'.format(__version__)
 		print "Connecting to {}:{}...".format(server, port)
 		print "Press Ctrl-C to quit"
@@ -235,7 +243,7 @@ class Logbot(SingleServerIRCBot):
 		c.privmsg(self.user(event), self.format_html["help"])
 
 	def on_quit(self, c, event):
-		if QUIT:
+		if LOG_QUIT:
 			nick = self.user(event)
 			# Only write the event on channels that actually had the user in the channel
 			for chan in self.channels:
@@ -243,7 +251,7 @@ class Logbot(SingleServerIRCBot):
 					self.format_event("quit", event, {"%chan%" : chan})
 
 	def on_topic(self, c, event): # someone changes the topic with /topic
-		if TOPIC:self.format_event("topic", event)
+		if LOG_TOPIC:self.format_event("topic", event)
 
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
@@ -269,8 +277,8 @@ class Logbot(SingleServerIRCBot):
 		elif action == 'kick': # someone got kicked off the channel
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
-			person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
-			msg = msg.format(hm, event.target(), event.arguments()[0], person, self.user(event))
+			#person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
+			msg = msg.format(hm, event.target(), event.arguments()[0], self.user(event))
 		elif action == 'nick': # user nick changed
 			#print params['channel'], params['old_nick'], params['new_nick']
 			msg = msg.format(hm, self.user(event), event.target())
@@ -395,17 +403,6 @@ class Logbot(SingleServerIRCBot):
 
 
 def main():
-	# create the log directory if not found
-	if not os.path.exists(LOG_FOLDER):
-		os.makedirs(LOG_FOLDER)
-	# create the channel index when started
-	channel_index()
-	# create channel directories if not found
-	for channel in CHANNELS:
-		channel_directory = os.path.join(os.getcwd(), LOG_FOLDER, channel)
-		if not os.path.isdir(channel_directory):
-			os.makedirs(channel_directory)
-
 	# Start the bot
 	bot = Logbot(SERVER, PORT, SERVER_PASS, CHANNELS, NICK, NICK_PASS)
 	try:
