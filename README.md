@@ -7,22 +7,37 @@ Works only with Python 2.7
 
 Configuration is done in jt-logger.py
 ```
+# Configuration
+
+DEBUG = False
+
+# IRC Server
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=["#jt2", '#linuxcnc'] # example ['#channel', '#nutherchannel']
-NICK = "jtlog"
+CHANNELS=['#channel', '#nutherchannel']
+NICK = 'jtlog'
 NICK_PASS = ""
-LOG_FOLDER = 'logs'
-LOG_LOCATION = 'http://somewebpage.com/logs/'
-```
-At this point the logger only logs messages and when someone says /me some text
 
-To Do:
-```
-log kick
-log mode
-log nick
-log pubnotic
-log topic
-```
+# The full path of the local directory logger index
+# The subdirectories will be created for each channel if not there
+LOG_FOLDER = '/home/server/programs/logger/logs'
+
+# The URL where the main log index is
+LOG_LOCATION = 'http://someurl.com/logs'
+
+# stop robots from indexing, this line is added to the <head> section of each page
+BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
+
+# turn on and off loggable events
+LOG_KICK = False
+LOG_JOIN = False
+LOG_MODE = True
+LOG_NICK = True
+LOG_PUBNOTICE = False
+LOG_TOPIC = True
+LOG_QUIT = False
+
+# End Configuration
+
+``
