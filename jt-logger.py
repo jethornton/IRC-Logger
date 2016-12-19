@@ -54,10 +54,10 @@ NICK_PASS = ""
 
 # The full path of the local directory logger index
 # The subdirectories will be created for each channel if not there
-LOG_FOLDER = '/home/john/programs/JT-Logger/logs'
+LOG_FOLDER = '/home/server/programs/logger/logs'
 
 # The URL where the log index is
-LOG_LOCATION = 'http://gnipsel.com/logs'
+LOG_LOCATION = 'http://someplace.com/logs'
 
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
