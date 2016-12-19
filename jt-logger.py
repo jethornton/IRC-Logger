@@ -52,11 +52,12 @@ CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
-# The local folder to save logs to
-LOG_FOLDER = 'logs'
+# The full path of the local directory logger index
+# The subdirectories will be created for each channel if not there
+LOG_FOLDER = '/home/john/programs/JT-Logger/logs'
 
-# The base URL where the logs are stored
-LOG_LOCATION = 'http://gnipsel.com/'
+# The URL where the log index is
+LOG_LOCATION = 'http://gnipsel.com/logs'
 
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
@@ -163,7 +164,7 @@ class Logbot(SingleServerIRCBot):
 		if not os.path.exists(LOG_FOLDER):
 			os.makedirs(LOG_FOLDER)
 		# create the channel index when started
-		with open(os.path.join(os.getcwd(), LOG_FOLDER, 'index.html'), 'w') as index:
+		with open(os.path.join(LOG_FOLDER, 'index.html'), 'w') as index:
 			index.write(CHANNEL_HEADER.format(BOTS))
 			for channel in CHANNELS:
 				link = channel.replace('#', '%23')
@@ -171,7 +172,7 @@ class Logbot(SingleServerIRCBot):
 			index.write(CHANNEL_FOOTER)
 		# create channel directories if not found
 		for channel in CHANNELS:
-			channel_directory = os.path.join(os.getcwd(), LOG_FOLDER, channel)
+			channel_directory = os.path.join(LOG_FOLDER, channel)
 			if not os.path.isdir(channel_directory):
 				os.makedirs(channel_directory)
 			else: # check for index in channel directory
@@ -255,7 +256,7 @@ class Logbot(SingleServerIRCBot):
 
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
-		log_url = os.path.join(LOG_LOCATION, LOG_FOLDER, event.target(), date)
+		log_url = os.path.join(LOG_LOCATION, event.target(), date)
 		log = self.format_html['help'].format(self.user(event), log_url)
 		c.privmsg(event.target(), log)
 
