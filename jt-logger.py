@@ -28,8 +28,8 @@ All configuration is done in this file
 """
 
 __author__ = "John Thornton <bjt128@gmail.com>"
-__version__ = "1.2"
-__date__ = "12/17/2016"
+__version__ = "1.3"
+__date__ = "12/19/2016"
 __copyright__ = "Copyright (c) John Thornton"
 __license__ = "GPL3"
 
@@ -54,10 +54,10 @@ NICK_PASS = ""
 
 # The full path of the local directory logger index
 # The subdirectories will be created for each channel if not there
-LOG_FOLDER = '/home/server/programs/logger/logs'
+LOG_FOLDER = '/home/john/programs/JT-Logger/logs'
 
-# The URL where the log index is
-LOG_LOCATION = 'http://someplace.com/logs'
+# The URL where the main log index is
+LOG_LOCATION = 'http://gnipsel.com/logs'
 
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
@@ -311,8 +311,7 @@ class Logbot(SingleServerIRCBot):
 
 	def create_index(self, channel):
 		# delete the index if found
-		log_dir = os.getcwd()+'/logs'
-		index_path = os.path.join(log_dir, channel, 'index.html')
+		index_path = os.path.join(LOG_FOLDER, channel, 'index.html')
 		if os.path.isfile(index_path):
 			print 'deleting index'
 			os.remove(index_path)
