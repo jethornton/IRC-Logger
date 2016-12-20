@@ -54,7 +54,7 @@ NICK_PASS = ""
 
 # The full path of the local directory logger index
 # The subdirectories will be created for each channel if not there
-LOG_FOLDER = '/home/john/programs/JT-Logger/logs'
+LOG_FOLDER = '/home/john/logs'
 
 # The URL where the main log index is
 LOG_LOCATION = 'http://gnipsel.com/logs'
@@ -90,7 +90,7 @@ CHANNEL_HEADER = """<!DOCTYPE html>
 		<meta charset="utf-8">
 		{}
 		<title>Chat Logs</title>
-		<link rel="stylesheet" href="../channel.css">
+		<link rel="stylesheet" href="channel.css">
 	</head>
 	<body>
 	<h1>Chat Logs</h1>
@@ -109,7 +109,7 @@ INDEX_HEADER = """<!DOCTYPE html>
 	<meta charset="utf-8">
 	{}
 	<title>JT Logs</title>
-	<link rel="stylesheet" href="../../calendar.css">
+	<link rel="stylesheet" href="../calendar.css">
 </head>
 <body>
 	<p><a href="../index.html">Return to Channel Index</a></p>
@@ -137,7 +137,7 @@ LOG_HEADER = """<!DOCTYPE html>
 	<meta charset="utf-8">
 	{}
 	<title>{} Logs</title>
-	<link rel="stylesheet" href="../../log.css">
+	<link rel="stylesheet" href="../log.css">
 </head>
 <body>
 	<p><a href="index.html">{} Calendar</a></p>
@@ -163,6 +163,11 @@ class Logbot(SingleServerIRCBot):
 		# create the log directory if not found
 		if not os.path.exists(LOG_FOLDER):
 			os.makedirs(LOG_FOLDER)
+			for filename in os.listdir('.'):
+				if '.css' in filename:
+					fp = os.path.join(os.getcwd(), filename)
+					os.system('cp {} {}'.format(fp, LOG_FOLDER))
+
 		# create the channel index when started
 		with open(os.path.join(LOG_FOLDER, 'index.html'), 'w') as index:
 			index.write(CHANNEL_HEADER.format(BOTS))
@@ -319,7 +324,7 @@ class Logbot(SingleServerIRCBot):
 		loglist = []
 		ym = set()
 		y = set()
-		for log in sorted(os.listdir(os.path.join(log_dir, channel)),reverse=True):
+		for log in sorted(os.listdir(os.path.join(LOG_FOLDER, channel)),reverse=True):
 			loglist.append(log)
 			ym.add(log[:7])
 			y.add(log[:4])
