@@ -28,7 +28,7 @@ All configuration is done in this file
 """
 
 __author__ = "John Thornton <bjt128@gmail.com>"
-__version__ = "1.3"
+__version__ = "1.4"
 __date__ = "12/19/2016"
 __copyright__ = "Copyright (c) John Thornton"
 __license__ = "GPL3"
@@ -39,6 +39,7 @@ import time
 import socket
 import os
 import calendar
+import urllib
 
 # Configuration
 
@@ -261,7 +262,8 @@ class Logbot(SingleServerIRCBot):
 
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
-		log_url = os.path.join(LOG_LOCATION, event.target(), date)
+		channel = urllib.quote(event.target(), safe='')
+		log_url = os.path.join(LOG_LOCATION, channel, date)
 		log = self.format_html['help'].format(self.user(event), log_url)
 		c.privmsg(event.target(), log)
 
@@ -298,7 +300,7 @@ class Logbot(SingleServerIRCBot):
 
 	def append_log_msg(self, date, channel, msg):
 		print date, channel, msg
-		log_path = os.path.join(os.getcwd(), LOG_FOLDER, channel, date) + '.html'
+		log_path = os.path.join(LOG_FOLDER, channel, date) + '.html'
 		if not os.path.isfile(log_path):
 			self.create_log(log_path, channel)
 		with open(log_path, 'r') as log:
