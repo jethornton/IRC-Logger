@@ -49,7 +49,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2'] #, '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -58,7 +58,7 @@ NICK_PASS = ""
 LOG_FOLDER = '/home/john/logs'
 
 # The URL where the main log index is
-LOG_LOCATION = 'http://gnipsel.com/logs'
+LOG_URL = 'http://gnipsel.com/logs'
 
 # stop robots from indexing
 BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
@@ -76,7 +76,8 @@ LOG_QUIT = False
 # End Configuration
 
 HTML = {
-	"help" : "{}: Today's Log {}.html",
+	"log" : "{}: Today's Log {}",
+	"no_log" : '{}: Nothing has been logged today, {} index at {}',
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
 	"mode" : '{} -!- {} mode set to <span class="mode">{}</span> by <span class="person">{}</span>',
@@ -248,7 +249,7 @@ class Logbot(SingleServerIRCBot):
 
 	def on_privmsg(self, c, event):
 		print self.user(event), event.arguments()
-		c.privmsg(self.user(event), self.format_html["help"])
+		c.privmsg(self.user(event), self.format_html["log"])
 
 	def on_quit(self, c, event):
 		if LOG_QUIT:
@@ -264,9 +265,16 @@ class Logbot(SingleServerIRCBot):
 	def log(self, c, event):
 		date = time.strftime("%Y-%m-%d")
 		channel = urllib.quote(event.target(), safe='')
-		log_url = os.path.join(LOG_LOCATION, channel, date)
-		log = self.format_html['help'].format(self.user(event), log_url)
-		c.privmsg(event.target(), log)
+		log_url = os.path.join(LOG_URL, channel, date) + '.html'
+		log_path = os.path.join(LOG_FOLDER, event.target(), date,) + '.html'
+		if not os.path.isfile(log_path):
+			log_index = os.path.join(LOG_URL, channel, 'index.html')
+			log = self.format_html['no_log'].format(self.user(event), event.target(), log_index)
+			c.privmsg(event.target(), log)
+		else:
+			print 'yes'
+			log = self.format_html['log'].format(self.user(event), log_url)
+			c.privmsg(event.target(), log)
 
 	def user(self, event):
 		# event.source() is the user and IP address
