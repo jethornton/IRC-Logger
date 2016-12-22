@@ -68,6 +68,7 @@ LOG_KICK = False
 LOG_JOIN = False
 LOG_MODE = True
 LOG_NICK = True
+LOG_PART = False
 LOG_PUBNOTICE = False
 LOG_TOPIC = True
 LOG_QUIT = False
