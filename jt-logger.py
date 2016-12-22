@@ -143,6 +143,8 @@ LOG_HEADER = """<!DOCTYPE html>
 	<link rel="stylesheet" href="../log.css">
 </head>
 <body>
+	<h1>{} Logs</h1>
+	<h2>{}</h2>
 	<p><a href="index.html">{} Calendar</a></p>
 """
 
@@ -320,8 +322,9 @@ class Logbot(SingleServerIRCBot):
 			log.writelines(data)
 
 	def create_log(self, path, channel): # create and empty log file
+		date = time.strftime("%b %d %Y")
 		with open(path, 'w') as log:
-			log.write(LOG_HEADER.format(BOTS, channel, channel))
+			log.write(LOG_HEADER.format(BOTS, channel, channel, date, channel))
 			log.writelines(LOG_FOOTER)
 		self.create_index(channel)
 

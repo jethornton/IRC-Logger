@@ -1,6 +1,15 @@
+h1 {
+	text-align: center;
+}
+
+h2 {
+	text-align: center;
+}
+
 .person{
 color:red;
 }
+
 footer{
 text-align: center;
 width: 100%;
