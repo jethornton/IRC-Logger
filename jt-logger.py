@@ -228,8 +228,6 @@ class Logbot(SingleServerIRCBot):
 			nick = self.user(event)
 			# Only write the event on channels that actually had the user in the channel
 			for chan in self.channels:
-				#print 'user list', self.channels[chan].users()
-				#print 'channel', chan
 				if nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
 					self.format_event('nick', event, {'channel':chan,
 					'old_nick':self.user(event), 'new_nick':event.target()})
@@ -238,7 +236,6 @@ class Logbot(SingleServerIRCBot):
 		if LOG_PART:self.format_event("part", event)
 
 	def on_pubmsg(self, c, event): # public messages
-		#print c.info()
 		if event.arguments()[0].startswith(NICK):
 			self.log(c, event)
 		elif event.arguments()[0].startswith('log'):
@@ -274,7 +271,6 @@ class Logbot(SingleServerIRCBot):
 			log = self.format_html['no_log'].format(self.user(event), event.target(), log_index)
 			c.privmsg(event.target(), log)
 		else:
-			print 'yes'
 			log = self.format_html['log'].format(self.user(event), log_url)
 			c.privmsg(event.target(), log)
 
@@ -300,7 +296,6 @@ class Logbot(SingleServerIRCBot):
 			#person = event.arguments()[1] if len(event.arguments()) > 1 else event.target()
 			msg = msg.format(hm, event.target(), event.arguments()[0], self.user(event))
 		elif action == 'nick': # user nick changed
-			#print params['channel'], params['old_nick'], params['new_nick']
 			msg = msg.format(hm, self.user(event), event.target())
 			channel = params['channel']
 		elif action == 'pubnotice': # /notice posted
