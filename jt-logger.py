@@ -130,7 +130,7 @@ INDEX_FOOTER = """</div><!-- End of calendar Class -->
 
 TABLE_HEADER = """	<table>
 		<tr>
-			<th colspan="3">{} Logs</th>
+			<th colspan="3"><span class="year">{} Logs</span></th>
 		</tr>
 """
 
@@ -390,9 +390,9 @@ class Logbot(SingleServerIRCBot):
 		datelist = []
 		for date in c.itermonthdates(year, month):
 			datelist.append(date)
-		table = '			<td class="month">\n				<table>\n'
+		table = '			<td>\n				<table>\n'
 		table += '					<tr>\n'
-		table += '					<th colspan="7">{}</th>\n'.format(calendar.month_name[month])
+		table += '					<th colspan="7"><span class="month">{}</span></th>\n'.format(calendar.month_name[month])
 		table += '					</tr>\n'
 		table += '					<tr class="dayheader"><!-- Day Header -->\n'
 		for day in calendar.day_abbr[0:7]:
