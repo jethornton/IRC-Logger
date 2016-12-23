@@ -77,7 +77,8 @@ LOG_QUIT = False
 
 HTML = {
 	"log" : "{}: Today's Log {}",
-	"no_log" : '{}: Nothing has been logged today, {} index at {}',
+	"no_log" : '{}: Nothing has been logged today, {} index {}',
+	"index" : '{}: The {} index {}',
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
 	"mode" : '{} -!- {} mode set to <span class="mode">{}</span> by <span class="person">{}</span>',
@@ -238,8 +239,10 @@ class Logbot(SingleServerIRCBot):
 	def on_pubmsg(self, c, event): # public messages
 		if event.arguments()[0].startswith(NICK):
 			self.log(c, event)
-		elif event.arguments()[0].startswith('log'):
+		elif event.arguments()[0] == 'log':
 			self.log(c, event)
+		elif event.arguments()[0] == 'index':
+			self.index(c, event)
 		else: # only log messages
 			self.format_event('pubmsg', event)
 
@@ -273,6 +276,12 @@ class Logbot(SingleServerIRCBot):
 		else:
 			log = self.format_html['log'].format(self.user(event), log_url)
 			c.privmsg(event.target(), log)
+
+	def index(self, c, event):
+		channel = urllib.quote(event.target(), safe='')
+		index_url = os.path.join(LOG_URL, channel, 'index.html')
+		msg = self.format_html['index'].format(self.user(event), event.target(), index_url)
+		c.privmsg(event.target(), msg)
 
 	def user(self, event):
 		# event.source() is the user and IP address
