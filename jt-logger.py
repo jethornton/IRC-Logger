@@ -40,6 +40,7 @@ import socket
 import os
 import calendar
 import urllib
+import re
 
 # Configuration
 
@@ -49,7 +50,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2'] #, '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2']#, '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -157,6 +158,8 @@ def setkeepalive(sock):
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 300)
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 30)
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 3)
+
+urlre = re.compile('(http[s]?://[^\s]+|www.[^\s]+)', re.IGNORECASE)
 
 class Logbot(SingleServerIRCBot):
 	def __init__(self, server, port, server_pass=None, channels=[],
@@ -299,6 +302,8 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
 		elif action == 'pubmsg': # public message
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
+			if re.findall(urlre, msg):
+				msg = re.sub(urlre, r'<a href="\1">\1</a>', msg)
 		elif action == 'kick': # someone got kicked off the channel
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
