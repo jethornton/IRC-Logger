@@ -303,7 +303,7 @@ class Logbot(SingleServerIRCBot):
 		elif action == 'pubmsg': # public message
 			msg = msg.format(hm, self.user(event), event.arguments()[0])
 			if re.findall(urlre, msg):
-				msg = re.sub(urlre, r'<a href="\1">\1</a>', msg)
+				msg = re.sub(urlre, r'<a href="\1" target="_blank">\1</a>', msg)
 		elif action == 'kick': # someone got kicked off the channel
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
