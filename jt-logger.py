@@ -159,8 +159,9 @@ def setkeepalive(sock):
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 30)
 	sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 3)
 
-http_re = re.compile('(http[s]?://[^\s]+)', re.IGNORECASE)
-www_re = re.compile('(www.[^\s]+)', re.IGNORECASE)
+http_re = re.compile('( http[s]?://[^\s]+)', re.IGNORECASE)
+www_re = re.compile('( www.[^\s]+)', re.IGNORECASE) # findall search string
+www_add = re.compile('(www.[^\s]+)', re.IGNORECASE) # sub search string
 
 class Logbot(SingleServerIRCBot):
 	def __init__(self, server, port, server_pass=None, channels=[],
@@ -306,7 +307,7 @@ class Logbot(SingleServerIRCBot):
 			if re.findall(http_re, msg): # check for http:// and https://
 				msg = re.sub(http_re, r'<a href="\1/" target="_blank">\1</a>', msg)
 			if re.findall(www_re, msg): # check for www.
-				msg = re.sub(www_re, r'<a href="http://\1/" target="_blank">\1</a>', msg)
+				msg = re.sub(www_add, r'<a href="http://\1/" target="_blank">\1</a>', msg)
 		elif action == 'kick': # someone got kicked off the channel
 			msg = msg.format(hm, self.user(event), event.target(), event.source(), event.arguments()[1])
 		elif action == 'mode': # the mode was changed with /mode?
