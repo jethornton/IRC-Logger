@@ -408,9 +408,9 @@ class Logbot(SingleServerIRCBot):
 		datelist = []
 		for date in c.itermonthdates(year, month):
 			datelist.append(date)
-		table = '			<td>\n				<table>\n'
+		table = '			<td class="month">\n				<table>\n'
 		table += '					<tr>\n'
-		table += '					<th colspan="7"><span class="month">{}</span></th>\n'.format(calendar.month_name[month])
+		table += '					<th colspan="7"><span class="month-name">{}</span></th>\n'.format(calendar.month_name[month])
 		table += '					</tr>\n'
 		table += '					<tr class="dayheader"><!-- Day Header -->\n'
 		for day in calendar.day_abbr[0:7]:
