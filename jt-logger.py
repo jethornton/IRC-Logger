@@ -62,7 +62,7 @@ LOG_FOLDER = '/home/john/logs'
 LOG_URL = 'http://gnipsel.com/logs'
 
 # stop robots from indexing
-BOTS = '<meta name=”ROBOTS” content=”NOINDEX, NOFOLLOW, NOARCHIVE, NOODP, NOYDIR”>'
+BOTS = '<meta name="robots" content="noarchive,nofollow,noimageindex,noindex,noodp,nosnippet"/>'
 
 # turn on and off loggable events
 LOG_KICK = False
