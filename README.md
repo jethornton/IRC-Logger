@@ -41,3 +41,4 @@ LOG_QUIT = False
 # End Configuration
 
 ``
+css files for logs, calendar and index
