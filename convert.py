@@ -41,26 +41,34 @@ anchor_re = re.compile('<a .*>*</a>')
 time_anchor_re = re.compile('<a href="#.*]</a>')
 time_re = re.compile('\[.*]')
 name_re = re.compile(r'style="color:.>*.*</span>')
-
+converted = 0
+not_converted = 0
 for log_file in sorted(os.listdir(LOG_FOLDER)):
 	d = datetime.datetime.strptime(log_file[:10], '%Y-%m-%d')
 	date = datetime.date.strftime(d, "%b %d %Y")
 	new_data = []
 	with open(os.path.join(LOG_FOLDER,log_file), 'r') as log:
-		data = log.readlines()[32:-4]
-		for index, line in enumerate(data):
-			if line.startswith('<a href='):
-				x = re.search(time_re, line) # get the time
-				line = re.sub(time_anchor_re, x.group(0)[1:6], line, 1)
-				if re.search(name_re, line):
-					y = re.search(name_re, line)
-					name = y.group(0)[32:-11]
-					if name.endswith('\\'):
-						name = name + '\\'
-				line = re.sub(name_re, '>' + name + '</span>', line)
-			new_data.append(line)
+		if log.readline() == '<!DOCTYPE html>\n':
+			not_converted +=1
+		else:
+			data = log.readlines()[32:-4]
+			for index, line in enumerate(data):
+				if line.startswith('<a href='):
+					x = re.search(time_re, line) # get the time
+					line = re.sub(time_anchor_re, x.group(0)[1:6], line, 1)
+					if re.search(name_re, line):
+						y = re.search(name_re, line)
+						name = y.group(0)[32:-11]
+						if name.endswith('\\'):
+							name = name + '\\'
+					line = re.sub(name_re, '>' + name + '</span>', line)
+				new_data.append(line)
+			converted += 1
 	with open(os.path.join(LOG_FOLDER, log_file), 'w') as log:
 		log.write(LOG_HEADER.format(BOTS, CHANNEL, CHANNEL, date, CHANNEL))
 		log.writelines(new_data)
 		log.writelines(LOG_FOOTER)
+
+print '{} files were converted'.format(converted)
+print '{} files were already the new format'.format(not_converted)
 
