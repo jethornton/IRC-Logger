@@ -41,6 +41,7 @@ anchor_re = re.compile('<a .*>*</a>')
 time_anchor_re = re.compile('<a href="#.*]</a>')
 time_re = re.compile('\[.*]')
 name_re = re.compile(r'style="color:.>*.*</span>')
+target_re = re.compile('(<a href=.http.*?)(>)')
 converted = 0
 not_converted = 0
 for log_file in sorted(os.listdir(LOG_FOLDER)):
@@ -62,6 +63,8 @@ for log_file in sorted(os.listdir(LOG_FOLDER)):
 						if name.endswith('\\'):
 							name = name + '\\'
 					line = re.sub(name_re, '>' + name + '</span>', line)
+				if '<a href=' in line: # add target=_blank
+					line = re.sub(target_re, r'\1 target="_blank">', line)
 				new_data.append(line)
 			converted += 1
 	with open(os.path.join(LOG_FOLDER, log_file), 'w') as log:
