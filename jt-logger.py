@@ -50,7 +50,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2']#, '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -73,6 +73,10 @@ LOG_PART = False
 LOG_PUBNOTICE = False
 LOG_TOPIC = True
 LOG_QUIT = False
+
+# Time format, comment out the one you don't want
+TIME_FORMAT = '%I:%M %p' # 12 hour format with AM PM
+#TIME_FORMAT = '%H:%M' # 24 hour format
 
 # End Configuration
 
@@ -297,7 +301,7 @@ class Logbot(SingleServerIRCBot):
 		# event.arguments()[0] is the message
 		# event.eventtype() is the event type like pubmsg, nick etc.
 		date = time.strftime("%Y-%m-%d")
-		hm = time.strftime('%I:%M')
+		hm = time.strftime(TIME_FORMAT)
 		msg = self.format_html[action]
 		channel = event.target()
 		if action == 'action': # someone says /me
