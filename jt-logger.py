@@ -41,6 +41,7 @@ import os
 import calendar
 import urllib
 import re
+import cgi
 
 # Configuration
 
@@ -305,9 +306,9 @@ class Logbot(SingleServerIRCBot):
 		msg = self.format_html[action]
 		channel = event.target()
 		if action == 'action': # someone says /me
-			msg = msg.format(hm, self.user(event), event.arguments()[0])
+			msg = msg.format(hm, self.user(event), cgi.escape(event.arguments()[0]))
 		elif action == 'pubmsg': # public message
-			msg = msg.format(hm, self.user(event), event.arguments()[0])
+			msg = msg.format(hm, self.user(event), cgi.escape(event.arguments()[0]))
 			if re.findall(http_re, msg): # check for http:// and https://
 				msg = re.sub(http_re, r'<a href="\1/" target="_blank">\1</a>', msg)
 			if re.findall(www_re, msg): # check for www.
