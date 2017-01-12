@@ -349,28 +349,20 @@ class Logbot(SingleServerIRCBot):
 	def create_index(self, channel):
 		# delete the index if found
 		index_path = os.path.join(LOG_FOLDER, channel, 'index.html')
-		if os.path.isfile(index_path):
-			print 'deleting index'
-			os.remove(index_path)
-		# get a list of years/months in the channel
-		loglist = []
-		ym = set()
-		y = set()
-		for log in sorted(os.listdir(os.path.join(LOG_FOLDER, channel)),reverse=True):
-			loglist.append(log)
-			ym.add(log[:7])
-			y.add(log[:4])
-		if len(y) > 0: # create the index
+		c_path = os.path.join(LOG_FOLDER, channel)
+		logs = [x for x in sorted(os.listdir(c_path), reverse=True) if x != 'index.html']
+		ym = [x[:7] for x in sorted(os.listdir(c_path), reverse=True) if x != 'index.html']
+		ymset = set(ym)
+		ymlist = sorted(list(ymset),reverse=True) # list of unique year month
+		ys = [x[:4] for x in sorted(os.listdir(c_path), reverse=True) if x != 'index.html']
+		yset = set(ys)
+		ylist = sorted(list(yset),reverse=True) # list of unique years
+		if len(ylist) > 0: # create the index
 			index = INDEX_HEADER.format(BOTS, channel)
-			# list of year-month for channel
-			monthlist = sorted(list(ym),reverse=True)
-			yearlist = sorted(list(y),reverse=True)
-			for year in yearlist:
+			for year in ylist:
 				index += TABLE_HEADER.format(year)
-				months = []
-				for item in monthlist:
-					if year == item[:4]:
-						months.append(item)
+				# need list of months in year
+				months = [x for x in ymlist if x[:4] == year]
 				# create year header
 				#figure out which rows to make
 				row1 = ['03', '02', '01']
@@ -381,26 +373,26 @@ class Logbot(SingleServerIRCBot):
 				if any(a[-2:] == b for a in months for b in row1):
 					index += '		<tr>\n'
 					for i in range(1,4):
-						index += self.create_month(int(year), i, loglist)
+						index += self.create_month(int(year), i, logs)
 					index +=  '		</tr>\n'
 
 				if any(a[-2:] == b for a in months for b in row2):
 					index += '		<tr>\n'
 					for i in range(4,7):
-						index += self.create_month(int(year), i, loglist)
+						index += self.create_month(int(year), i, logs)
 					index +=  '		</tr>\n'
 
 				if any(a[-2:] == b for a in months for b in row3):
 					index += '		<tr>\n'
 					for i in range(7,10):
-						index += self.create_month(int(year), i, loglist)
+						index += self.create_month(int(year), i, logs)
 					index +=  '		</tr>\n'
 
 				if any(a[-2:] == b for a in months for b in row4):
 					# create a row of 3 months
 					index += '		<tr>\n'
 					for i in range(10,13):
-						index += self.create_month(int(year), i, loglist)
+						index += self.create_month(int(year), i, logs)
 					index +=  '		</tr>\n'
 
 				index += '	</table><br>'
@@ -408,7 +400,7 @@ class Logbot(SingleServerIRCBot):
 			with open(index_path,'w') as f:
 				f.write(index)
 
-	def create_month(self, year, month, loglist):
+	def create_month(self, year, month, logs):
 		c = calendar.TextCalendar()
 		datelist = []
 		for date in c.itermonthdates(year, month):
@@ -429,7 +421,7 @@ class Logbot(SingleServerIRCBot):
 			if day[0] == 0:
 				table += '						<td>&nbsp;</td>\n'
 			else:
-				if any('{:%Y-%m-%d}'.format(datelist[index]) in i for i in loglist):
+				if any('{:%Y-%m-%d}'.format(datelist[index]) in i for i in logs):
 					table += '						<td><a href="{:%Y-%m-%d}.html">{}</a></td>\n'.format(datelist[index],str(day[0]))
 				else:
 					table += '						<td>{}</td>\n'.format(str(day[0]))
