@@ -51,7 +51,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=['#jt2', '#linuxcnc'] # example ['#channel', '#nutherchannel']
+CHANNELS=['#jt2', '#linuxcnc', '#linuxcnc-devel'] # example ['#channel', '#nutherchannel']
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -80,6 +80,8 @@ TIME_FORMAT = '%I:%M %p' # 12 hour format with AM PM
 #TIME_FORMAT = '%H:%M' # 24 hour format
 
 # End Configuration
+
+STRIPPED = lambda s: "".join(i for i in s if 31 < ord(i) < 127)
 
 HTML = {
 	"log" : "{}: Today's Log {}",
@@ -303,7 +305,7 @@ class Logbot(SingleServerIRCBot):
 		# event.eventtype() is the event type like pubmsg, nick etc.
 		date = time.strftime("%Y-%m-%d")
 		hm = time.strftime(TIME_FORMAT)
-		msg = self.format_html[action]
+		msg = STRIPPED(self.format_html[action])
 		channel = event.target()
 		if action == 'action': # someone says /me
 			msg = msg.format(hm, self.user(event), cgi.escape(event.arguments()[0]))
