@@ -89,11 +89,14 @@ HTML = {
 	"index" : '{}: The {} index {}',
 	"action" : '{} * <span class="person">{}</span> {}',
 	"kick" : '{} -!- <span class="kick">{}</span> was kicked from {} by {} [{}]',
+	"join" : '{} <span class="person">{}:has joined</span>',
 	"mode" : '{} -!- {} mode set to <span class="mode">{}</span> by <span class="person">{}</span>',
 	"nick" : '{} <span class="person">{}</span> is now known as <span class="person">{}</span>',
 	"pubmsg" : '{} <span class="person">{}:</span> {}',
 	"pubnotice" : '{} <span class="notice">-{}:{}-</span>{}',
+	"part" : '{} <span class="person">{}:has left</span>{} {}',
 	"topic" : '{} <span class="person">{}</span> changed topic of <span class="channel">{}</span> to: {}',
+	"quit" : '{} <span class="person">{}:has quit</span>',
 }
 
 CHANNEL_HEADER = """<!DOCTYPE html>
@@ -306,7 +309,11 @@ class Logbot(SingleServerIRCBot):
 		date = time.strftime("%Y-%m-%d")
 		hm = time.strftime(TIME_FORMAT)
 		msg = STRIPPED(self.format_html[action])
-		channel = event.target()
+		if action == 'quit':
+			channel = params.get("%chan%")
+		else:
+			channel = event.target()
+
 		if action == 'action': # someone says /me
 			msg = msg.format(hm, self.user(event), cgi.escape(event.arguments()[0]))
 		elif action == 'pubmsg': # public message
@@ -327,6 +334,12 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
 		elif action == 'topic': # /topic changed
 			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
+		elif action == 'join': # someone has joined
+			msg = msg.format(hm, self.user(event), event.target())
+		elif action == 'part': # someone has left the channel
+			msg = msg.format(hm, self.user(event), event.target(), event.arguments()[0])
+		elif action == 'quit': # someone has quit
+			msg = msg.format(hm, self.user(event), event.target())
 		self.append_log_msg(date, channel, msg)
 
 	def append_log_msg(self, date, channel, msg):
