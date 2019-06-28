@@ -52,6 +52,8 @@ SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
 CHANNELS=['#jt2', '#linuxcnc', '#linuxcnc-devel'] # example ['#channel', '#nutherchannel']
+CHANNELS_LOWERCASE_LIST=[item.lower() for item in CHANNELS]
+
 NICK = 'jtlog'
 NICK_PASS = ""
 
@@ -162,6 +164,46 @@ LOG_HEADER = """<!DOCTYPE html>
 
 LOG_FOOTER = ['	<footer>\n', '		<p>Logs by: JT</p>\n', '</footer>\n',
  '	</body>\n', '</html>']
+
+def get_canonical_channel_name(channel_name):
+    """
+    Sometimes, channel names coming in from a message
+    may differ from the channel name we are monitoring, only
+    in terms of capitalization. For example: if we are monitoring
+    #channel, sometimes, a person may join the channel using the
+    command
+        /join #CHANNEL
+    or
+        /join #Channel
+
+    In either case, the server may not care - and allow the user to
+    join #channel using the above commands. (At least, that is the
+    case with ngircd)
+
+    For logging purposes - we only want ONE file for logging the events.
+    Hence, this function will return the canonical name for the channel.
+    And will be used when generating the file name / directory path where
+    the logs will be written.
+
+    Pre-requisites: a list named CHANNELS should have a list of channels
+                    that we monitor.
+
+                    a list named CHANNELS_LOWERCASE_LIST that has all the
+                    elements of THE CHANNELS list, but in lowercase
+
+    Returns the canonical name of the channel if it is known, else returns
+    the string "unknown-channel"
+
+    """
+    name_to_find = channel_name.lower()
+
+    index = CHANNELS_LOWERCASE_LIST.index(name_to_find) if name_to_find in CHANNELS_LOWERCASE_LIST else -1
+
+    if index == -1:
+        return "unknown-channel"
+    else:
+        return CHANNELS[index]
+
 
 def setkeepalive(sock):
 	sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -342,8 +384,19 @@ class Logbot(SingleServerIRCBot):
 			msg = msg.format(hm, self.user(event), event.target())
 		self.append_log_msg(date, channel, msg)
 
-	def append_log_msg(self, date, channel, msg):
+	def append_log_msg(self, date, channel_name, msg):
+                channel = get_canonical_channel_name(channel_name)
 		print date, channel, msg
+                #if the channel name is not in the list of channels that we monitor
+                #do not try to create a log file for it, but just log an error
+                #and return
+
+                if channel == "unknown-channel":
+                    print "channel name:" + search_name + " is unknown - not logging"
+                    return
+                else:
+                    print channel
+
 		log_path = os.path.join(LOG_FOLDER, channel, date) + '.html'
 		if not os.path.isfile(log_path):
 			self.create_log(log_path, channel)
